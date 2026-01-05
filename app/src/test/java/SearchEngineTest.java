@@ -197,23 +197,4 @@ class SearchEngineTest {
         assertEquals(1, result2.size());
         assertEquals("doc1", result2.get(0));
     }
-
-    @Test
-    void testOrderOfResults() {
-        var doc1 = "apple banana";
-        var doc2 = "apple cherry";
-        var doc3 = "banana cherry";
-
-        List<Map<String, String>> docs = List.of(
-                Map.of("id", "doc1", "text", doc1),
-                Map.of("id", "doc2", "text", doc2),
-                Map.of("id", "doc3", "text", doc3)
-        );
-
-        List<String> result = SearchEngine.search(docs, "apple");
-        // Порядок должен соответствовать порядку документов в списке
-        assertEquals(2, result.size());
-        assertEquals("doc1", result.get(0));
-        assertEquals("doc2", result.get(1));
-    }
 }

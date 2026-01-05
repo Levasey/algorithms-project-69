@@ -1,25 +1,25 @@
 package hexlet.code;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SearchEngine {
     private static final Pattern WORD_PATTERN = Pattern.compile("\\w+");
 
     public static List<String> search(List<Map<String, String>> docs, String word) {
-        List<String> result = new ArrayList<>();
+        Map<String, Integer> relevanceMap = new HashMap<>();
 
         // Обрабатываем искомое слово
         String processedWord = extractWord(word);
         if (processedWord.isEmpty()) {
-            return result;
+            return new ArrayList<>();
         }
 
-        // Проходим по всем документам
+        // Проходим по всем документам и считаем релевантность
         for (Map<String, String> doc : docs) {
             String text = doc.get("text");
             String id = doc.get("id");
@@ -28,16 +28,20 @@ public class SearchEngine {
                 continue;
             }
 
-            // Создаем множество терминов из текста документа
-            Set<String> terms = extractWords(text);
+            // Подсчитываем количество вхождений слова в документе
+            int relevance = countWordOccurrences(text.toLowerCase(), processedWord);
 
-            // Проверяем наличие слова в документе
-            if (terms.contains(processedWord)) {
-                result.add(id);
+            // Сохраняем релевантность для документа
+            if (relevance > 0) {
+                relevanceMap.put(id, relevance);
             }
         }
 
-        return result;
+        // Сортируем документы по релевантности (по убыванию)
+        return relevanceMap.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     // Метод для извлечения слова из строки (без знаков препинания)
@@ -49,13 +53,17 @@ public class SearchEngine {
         return "";
     }
 
-    // Метод для извлечения всех слов из текста
-    private static Set<String> extractWords(String text) {
-        Set<String> words = new HashSet<>();
-        var matcher = WORD_PATTERN.matcher(text.toLowerCase());
+    // Метод для подсчета вхождений слова в текст
+    private static int countWordOccurrences(String text, String word) {
+        int count = 0;
+        var matcher = WORD_PATTERN.matcher(text);
+
         while (matcher.find()) {
-            words.add(matcher.group());
+            if (matcher.group().equals(word)) {
+                count++;
+            }
         }
-        return words;
+
+        return count;
     }
 }
