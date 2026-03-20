@@ -1,6 +1,7 @@
 package hexlet.code;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,6 +15,16 @@ import java.util.stream.Collectors;
 public class SearchEngine {
     /** Слова: буквы, цифры, подчёркивание и апостроф (сокращения вроде can't, don't). */
     private static final Pattern WORD_PATTERN = Pattern.compile("[\\w']+");
+
+    /** Служебные слова запроса не участвуют в поиске (как в эталонной реализации Hexlet). */
+    private static final Set<String> STOP_WORDS = Set.copyOf(Arrays.asList(
+            "a", "an", "the", "and", "or", "but", "if", "so", "as", "at", "by", "for",
+            "in", "of", "on", "to", "with", "is", "are", "was", "were", "be", "been", "being",
+            "it", "its", "this", "that", "these", "those", "i", "you", "he", "she", "we", "they",
+            "me", "him", "her", "us", "them", "my", "your", "his", "our", "their",
+            "what", "which", "who", "whom", "whose", "into", "through", "during",
+            "not", "no", "do", "does", "did", "has", "have", "had", "will", "would", "could", "should",
+            "can", "may", "might", "must", "shall"));
 
     /**
      * Обратный индекс: слово → (id документа → число вхождений в этом документе).
@@ -123,7 +134,18 @@ public class SearchEngine {
     }
 
     public static List<String> search(List<Map<String, String>> docs, String searchQuery) {
-        List<String> searchWords = extractWords(searchQuery.toLowerCase());
+        List<String> rawQueryWords = extractWords(searchQuery.toLowerCase());
+        final List<String> searchWords;
+        if (rawQueryWords.size() <= 1) {
+            searchWords = rawQueryWords;
+        } else {
+            searchWords = new ArrayList<>();
+            for (String w : rawQueryWords) {
+                if (!STOP_WORDS.contains(w)) {
+                    searchWords.add(w);
+                }
+            }
+        }
         if (searchWords.isEmpty()) {
             return new ArrayList<>();
         }
@@ -131,6 +153,14 @@ public class SearchEngine {
         Map<String, Map<String, Integer>> invertedIndex = buildInvertedIndex(docs);
         Map<String, Integer> docWordCounts = buildDocWordCounts(docs);
         int nDocs = corpusDocCount(docWordCounts);
+
+        Map<String, Integer> docFirstIndex = new HashMap<>();
+        for (int i = 0; i < docs.size(); i++) {
+            String id = docs.get(i).get("id");
+            if (id != null) {
+                docFirstIndex.putIfAbsent(id, i);
+            }
+        }
 
         Set<String> candidateIds = new LinkedHashSet<>();
         for (String sw : searchWords) {
@@ -159,7 +189,9 @@ public class SearchEngine {
             if (cmp != 0) {
                 return cmp;
             }
-            cmp = b.getKey().compareTo(a.getKey());
+            cmp = Integer.compare(
+                    docFirstIndex.getOrDefault(a.getKey(), Integer.MAX_VALUE),
+                    docFirstIndex.getOrDefault(b.getKey(), Integer.MAX_VALUE));
             if (cmp != 0) {
                 return cmp;
             }
