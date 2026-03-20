@@ -132,14 +132,6 @@ public class SearchEngine {
         Map<String, Integer> docWordCounts = buildDocWordCounts(docs);
         int nDocs = corpusDocCount(docWordCounts);
 
-        Map<String, Integer> docFirstIndex = new HashMap<>();
-        for (int i = 0; i < docs.size(); i++) {
-            String id = docs.get(i).get("id");
-            if (id != null) {
-                docFirstIndex.putIfAbsent(id, i);
-            }
-        }
-
         Set<String> candidateIds = new LinkedHashSet<>();
         for (String sw : searchWords) {
             Map<String, Integer> postings = invertedIndex.get(sw);
@@ -167,9 +159,7 @@ public class SearchEngine {
             if (cmp != 0) {
                 return cmp;
             }
-            cmp = Integer.compare(
-                    docFirstIndex.getOrDefault(a.getKey(), Integer.MAX_VALUE),
-                    docFirstIndex.getOrDefault(b.getKey(), Integer.MAX_VALUE));
+            cmp = b.getKey().compareTo(a.getKey());
             if (cmp != 0) {
                 return cmp;
             }
