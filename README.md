@@ -5,6 +5,13 @@
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/Levasey/algorithms-project-69/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Levasey/algorithms-project-69/actions)
 [![Java CI](https://github.com/Levasey/algorithms-project-69/actions/workflows/build.yml/badge.svg)](https://github.com/Levasey/algorithms-project-69/actions/workflows/build.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Levasey_algorithms-project-69&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Levasey_algorithms-project-69)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Levasey_algorithms-project-69&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Levasey_algorithms-project-69)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Levasey_algorithms-project-69&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Levasey_algorithms-project-69)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Levasey_algorithms-project-69&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Levasey_algorithms-project-69)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Levasey_algorithms-project-69&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=Levasey_algorithms-project-69)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Levasey_algorithms-project-69&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Levasey_algorithms-project-69)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Levasey_algorithms-project-69&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Levasey_algorithms-project-69)
 
 ## Возможности
 
