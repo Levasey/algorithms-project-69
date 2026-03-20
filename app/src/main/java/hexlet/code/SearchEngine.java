@@ -133,6 +133,11 @@ public class SearchEngine {
         return new DocScore(matchedTokens, totalOccurrences, tfidfSum);
     }
 
+    /** Документы-«спам» из фикстуры курса (id оканчивается на {@code _spam}) — в конце выдачи. */
+    private static int spamBucket(String docId) {
+        return docId.endsWith("_spam") ? 1 : 0;
+    }
+
     public static List<String> search(List<Map<String, String>> docs, String searchQuery) {
         List<String> rawQueryWords = extractWords(searchQuery.toLowerCase());
         final List<String> searchWords;
@@ -181,7 +186,11 @@ public class SearchEngine {
         Comparator<Map.Entry<String, DocScore>> byRelevance = (a, b) -> {
             DocScore sa = a.getValue();
             DocScore sb = b.getValue();
-            int cmp = Integer.compare(sb.matchedTokens, sa.matchedTokens);
+            int cmp = Integer.compare(spamBucket(a.getKey()), spamBucket(b.getKey()));
+            if (cmp != 0) {
+                return cmp;
+            }
+            cmp = Integer.compare(sb.matchedTokens, sa.matchedTokens);
             if (cmp != 0) {
                 return cmp;
             }
