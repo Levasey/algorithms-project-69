@@ -167,13 +167,13 @@ public class SearchEngine {
             if (cmp != 0) {
                 return cmp;
             }
-            cmp = Double.compare(sb.tfidfSum, sa.tfidfSum);
+            cmp = Integer.compare(
+                    docFirstIndex.getOrDefault(a.getKey(), Integer.MAX_VALUE),
+                    docFirstIndex.getOrDefault(b.getKey(), Integer.MAX_VALUE));
             if (cmp != 0) {
                 return cmp;
             }
-            return Integer.compare(
-                    docFirstIndex.getOrDefault(a.getKey(), Integer.MAX_VALUE),
-                    docFirstIndex.getOrDefault(b.getKey(), Integer.MAX_VALUE));
+            return Double.compare(sb.tfidfSum, sa.tfidfSum);
         };
 
         return scoreById.entrySet().stream()
