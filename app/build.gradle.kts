@@ -33,5 +33,6 @@ sonar {
     properties {
         property("sonar.projectKey", "Levasey_algorithms-project-69")
         property("sonar.organization", "levasey")
+        property("sonar.scanner.skipJreProvisioning", "true")
     }
 }
