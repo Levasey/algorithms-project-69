@@ -2,55 +2,74 @@ package hexlet.code;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class SearchEngine {
-    private static final Pattern WORD_PATTERN = Pattern.compile("\\w+");
+    /** Слова: буквы, цифры, подчёркивание и апостроф (сокращения вроде can't, don't). */
+    private static final Pattern WORD_PATTERN = Pattern.compile("[\\w']+");
+
+    /**
+     * Обратный индекс: слово → (id документа → число вхождений в этом документе).
+     */
+    private static Map<String, Map<String, Integer>> buildInvertedIndex(List<Map<String, String>> docs) {
+        Map<String, Map<String, Integer>> index = new HashMap<>();
+        for (Map<String, String> doc : docs) {
+            String text = doc.get("text");
+            String id = doc.get("id");
+            if (text == null || id == null || text.isEmpty()) {
+                continue;
+            }
+            List<String> words = extractWords(text.toLowerCase());
+            if (words.isEmpty()) {
+                continue;
+            }
+            Map<String, Integer> freqInDoc = new HashMap<>();
+            for (String w : words) {
+                freqInDoc.merge(w, 1, Integer::sum);
+            }
+            for (Map.Entry<String, Integer> e : freqInDoc.entrySet()) {
+                index.computeIfAbsent(e.getKey(), k -> new HashMap<>())
+                        .merge(id, e.getValue(), Integer::sum);
+            }
+        }
+        return index;
+    }
 
     public static List<String> search(List<Map<String, String>> docs, String searchQuery) {
-        Map<String, Integer> relevanceMap = new HashMap<>();
-
-        // Разбиваем поисковый запрос на слова
         List<String> searchWords = extractWords(searchQuery.toLowerCase());
         if (searchWords.isEmpty()) {
             return new ArrayList<>();
         }
 
-        // Проходим по всем документам и считаем релевантность
-        for (Map<String, String> doc : docs) {
-            String text = doc.get("text");
-            String id = doc.get("id");
+        Map<String, Map<String, Integer>> invertedIndex = buildInvertedIndex(docs);
+        Map<String, Integer> relevanceMap = new HashMap<>();
 
-            if (text == null || id == null || text.isEmpty()) {
-                continue;
+        Set<String> candidateIds = new LinkedHashSet<>();
+        for (String sw : searchWords) {
+            Map<String, Integer> postings = invertedIndex.get(sw);
+            if (postings != null) {
+                candidateIds.addAll(postings.keySet());
             }
+        }
 
-            // Извлекаем слова из текста документа
-            List<String> documentWords = extractWords(text.toLowerCase());
-            if (documentWords.isEmpty()) {
-                continue;
-            }
-
-            // Подсчитываем количество вхождений слова в документе
-            int relevance = calculateRelevance(documentWords, searchWords);
-
-            // Сохраняем релевантность для документа
+        for (String id : candidateIds) {
+            int relevance = relevanceFromIndex(invertedIndex, id, searchWords);
             if (relevance > 0) {
                 relevanceMap.put(id, relevance);
             }
         }
 
-        // Сортируем документы по релевантности (по убыванию)
         return relevanceMap.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
 
-    // Метод для извлечения слов из строки
     private static List<String> extractWords(String input) {
         List<String> words = new ArrayList<>();
         var matcher = WORD_PATTERN.matcher(input);
@@ -62,36 +81,29 @@ public class SearchEngine {
         return words;
     }
 
-    // Метод для расчета релевантности документа
-    private static int calculateRelevance(List<String> documentWords, List<String> searchWords) {
+    private static int relevanceFromIndex(
+            Map<String, Map<String, Integer>> invertedIndex,
+            String docId,
+            List<String> searchWords) {
         int uniqueWordsFound = 0;
         int totalOccurrences = 0;
 
-        // Считаем для каждого искомого слова
         for (String searchWord : searchWords) {
-            boolean wordFound = false;
-            int wordCount = 0;
-
-            for (String docWord : documentWords) {
-                if (docWord.equals(searchWord)) {
-                    wordFound = true;
-                    wordCount++;
-                }
+            Map<String, Integer> postings = invertedIndex.get(searchWord);
+            if (postings == null) {
+                continue;
             }
-
-            if (wordFound) {
+            Integer count = postings.get(docId);
+            if (count != null && count > 0) {
                 uniqueWordsFound++;
-                totalOccurrences += wordCount;
+                totalOccurrences += count;
             }
         }
 
-        // Если не нашли хотя бы одно слово, релевантность = 0
         if (uniqueWordsFound == 0) {
             return 0;
         }
 
-        // Сначала считаем количество найденных уникальных слов,
-        // затем общее количество вхождений
         return uniqueWordsFound * 1000 + totalOccurrences;
     }
 }
