@@ -10,12 +10,12 @@ import java.util.stream.Collectors;
 public class SearchEngine {
     private static final Pattern WORD_PATTERN = Pattern.compile("\\w+");
 
-    public static List<String> search(List<Map<String, String>> docs, String word) {
+    public static List<String> search(List<Map<String, String>> docs, String searchQuery) {
         Map<String, Integer> relevanceMap = new HashMap<>();
 
-        // Обрабатываем искомое слово
-        String processedWord = extractWord(word);
-        if (processedWord.isEmpty()) {
+        // Разбиваем поисковый запрос на слова
+        List<String> searchWords = extractWords(searchQuery.toLowerCase());
+        if (searchWords.isEmpty()) {
             return new ArrayList<>();
         }
 
@@ -24,12 +24,18 @@ public class SearchEngine {
             String text = doc.get("text");
             String id = doc.get("id");
 
-            if (text == null || id == null) {
+            if (text == null || id == null || text.isEmpty()) {
+                continue;
+            }
+
+            // Извлекаем слова из текста документа
+            List<String> documentWords = extractWords(text.toLowerCase());
+            if (documentWords.isEmpty()) {
                 continue;
             }
 
             // Подсчитываем количество вхождений слова в документе
-            int relevance = countWordOccurrences(text.toLowerCase(), processedWord);
+            int relevance = calculateRelevance(documentWords, searchWords);
 
             // Сохраняем релевантность для документа
             if (relevance > 0) {
@@ -44,26 +50,48 @@ public class SearchEngine {
                 .collect(Collectors.toList());
     }
 
-    // Метод для извлечения слова из строки (без знаков препинания)
-    private static String extractWord(String input) {
-        var matcher = WORD_PATTERN.matcher(input.toLowerCase());
-        if (matcher.find()) {
-            return matcher.group();
-        }
-        return "";
-    }
-
-    // Метод для подсчета вхождений слова в текст
-    private static int countWordOccurrences(String text, String word) {
-        int count = 0;
-        var matcher = WORD_PATTERN.matcher(text);
+    // Метод для извлечения слов из строки
+    private static List<String> extractWords(String input) {
+        List<String> words = new ArrayList<>();
+        var matcher = WORD_PATTERN.matcher(input);
 
         while (matcher.find()) {
-            if (matcher.group().equals(word)) {
-                count++;
+            words.add(matcher.group());
+        }
+
+        return words;
+    }
+
+    // Метод для расчета релевантности документа
+    private static int calculateRelevance(List<String> documentWords, List<String> searchWords) {
+        int uniqueWordsFound = 0;
+        int totalOccurrences = 0;
+
+        // Считаем для каждого искомого слова
+        for (String searchWord : searchWords) {
+            boolean wordFound = false;
+            int wordCount = 0;
+
+            for (String docWord : documentWords) {
+                if (docWord.equals(searchWord)) {
+                    wordFound = true;
+                    wordCount++;
+                }
+            }
+
+            if (wordFound) {
+                uniqueWordsFound++;
+                totalOccurrences += wordCount;
             }
         }
 
-        return count;
+        // Если не нашли хотя бы одно слово, релевантность = 0
+        if (uniqueWordsFound == 0) {
+            return 0;
+        }
+
+        // Сначала считаем количество найденных уникальных слов,
+        // затем общее количество вхождений
+        return uniqueWordsFound * 1000 + totalOccurrences;
     }
 }
